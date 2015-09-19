@@ -71,6 +71,16 @@ def generate_dots(centerX1, centerX2, size, maxr, name):
         points.append((x1, x2, name))
         
     return points
+
+def generate_sin_dots(a, b, c, size, step):    
+    points = []
+    t = 0
+    for i in range(size):
+        t = t + step
+        y = a * math.sin(b * t) + c;
+        points.append((t, y))
+        
+    return points
     
 
 def count_weights(points, exitNeuronNum):
@@ -100,6 +110,74 @@ def count_weights(points, exitNeuronNum):
     b = T/w2
     print cur_epoch
     return a, b
+
+class perceptrone:
+    def __init__(self, inCount):
+        self.in_count = inCount
+        self.w = []
+        self.T = 1;
+        
+        self.alf = 0.1
+            
+    def teach(self, inputs, outputs, Ee):
+        self.w = [0.1 for x in range(self.in_count)]
+        cur_epoch = 0
+        good_epoch = False
+        while(not good_epoch):
+            good_epoch = True
+            j = 0
+            for cur_input in inputs:
+                #alf = step_adaptive(cur_point[0: 1])
+                S = 0
+                i = 0
+                for xi in cur_input:
+                    S = S + xi*self.w[i]
+                    i = i + 1;
+                S = S - self.T
+                y = F_linear(S)
+                K = y - outputs[j]
+                i = 0
+                for wi in self.w:
+                    wi = wi - (self.alf * cur_input[i] * K)
+                    i = i + 1;
+                self.T = self.T + (self.alf * K)
+                j = j + 1
+            Es = 0
+            j = 0
+            for cur_input in inputs:
+                S = 0
+                i = 0
+                for xi in cur_input:
+                    S = S + xi*self.w[i]
+                    i = i + 1;
+                S = S - self.T
+                y = F_linear(S)
+                Es = Es + (y - outputs[j])**2
+            Es = Es / 2
+            if (Es < Ee):
+                good_epoch = False
+            cur_epoch = cur_epoch + 1
+            if (good_epoch):
+                break
+            if (cur_epoch > 3000):
+                break
+        print cur_epoch
+        
+    def get_prophecy(self, sample):
+        i = 0
+        S = 0
+        for xi in sample:
+            S = S + xi*self.w[i]
+            i = i + 1;
+        S = S - self.T
+        y = F_linear(S)
+        return y
+        
+        
+    
+        
+        
+    
 
 # <codecell>
 
@@ -137,8 +215,39 @@ plt.show()
 
 # <codecell>
 
-x = 4
+
+def solve_problem(lenght, steps_count, window_size):
+    step_length = lenght / steps_count
+    p = generate_sin_dots(1, 1, 0, steps_count, step_length);
+    p = zip(*p)
+    sample_size = steps_count - window_size
+    sample = []
+    answers = []
+    for i in range(0, sample_size) :
+        sample.append(p[1][i : i + window_size])
+        answers.append(p[1][i + window_size])
+    prc = perceptrone(len(sample[0]))
+    prc.teach(sample, answers, 10)
+    
+    x = 10.5*math.pi
+    y = prc.get_prophecy(p[1][sample_size: sample_size + window_size])
+
+    plt.plot(p[0], p[1], 'ro')
+    plt.plot(x, y, 'bo')
+    plt.axis([-1, 11*math.pi, -1, 1])
+    
+    plt.show()
+    
+                        
+    
+    
+    
+solve_problem(10*math.pi, 300, 5)
+    
+
+
 
 # <codecell>
 
 print x
+
